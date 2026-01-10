@@ -80,5 +80,8 @@
         "watch:server": "tsc -w -p ./server/tsconfig.json",
         "compile": "npm run compile:client && npm run compile:server",
         "postinstall": "cd client && npm install && cd ../server && npm install && cd .."
+    },
+    "volta": {
+        "node": "22.21.1"
     }
 }
