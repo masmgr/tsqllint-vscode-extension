@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import { DiagnosticSeverity } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CodeActionParams } from "vscode-languageserver-protocol/node";
 import { registerFileErrors, getCommands } from "../commands";
@@ -14,6 +15,7 @@ suite("commands.ts - registerFileErrors()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "Expected semi-colon",
         rule: "semi-colon",
+        severity: DiagnosticSeverity.Error,
       },
     ];
 
@@ -43,16 +45,19 @@ suite("commands.ts - registerFileErrors()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg1",
         rule: "rule1",
+        severity: DiagnosticSeverity.Error,
       },
       {
         range: { start: { line: 1, character: 0 }, end: { line: 1, character: 12 } },
         message: "msg2",
         rule: "rule2",
+        severity: DiagnosticSeverity.Error,
       },
       {
         range: { start: { line: 1, character: 5 }, end: { line: 1, character: 12 } },
         message: "msg3",
         rule: "rule3",
+        severity: DiagnosticSeverity.Error,
       },
     ];
 
@@ -79,6 +84,7 @@ suite("commands.ts - registerFileErrors()", () => {
         range: { start: { line: 100, character: 0 }, end: { line: 100, character: 10 } },
         message: "msg",
         rule: "rule",
+        severity: DiagnosticSeverity.Error,
       },
     ];
 
@@ -113,6 +119,7 @@ suite("commands.ts - registerFileErrors()", () => {
         range: { start: { line: 0, character: 4 }, end: { line: 0, character: 23 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ];
 
@@ -143,6 +150,7 @@ suite("commands.ts - registerFileErrors()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 10 } },
         message: "msg1",
         rule: "rule1",
+        severity: DiagnosticSeverity.Error,
       },
     ];
 
@@ -151,6 +159,7 @@ suite("commands.ts - registerFileErrors()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 10 } },
         message: "msg2",
         rule: "rule2",
+        severity: DiagnosticSeverity.Error,
       },
     ];
 
@@ -186,6 +195,7 @@ suite("commands.ts - getCommands()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -209,6 +219,7 @@ suite("commands.ts - getCommands()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -237,11 +248,13 @@ suite("commands.ts - getCommands()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg1",
         rule: "rule1",
+        severity: DiagnosticSeverity.Error,
       },
       {
         range: { start: { line: 1, character: 0 }, end: { line: 1, character: 12 } },
         message: "msg2",
         rule: "rule2",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -265,11 +278,13 @@ suite("commands.ts - getCommands()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg1",
         rule: "rule1",
+        severity: DiagnosticSeverity.Error,
       },
       {
         range: { start: { line: 2, character: 0 }, end: { line: 2, character: 13 } },
         message: "msg2",
         rule: "rule2",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -293,6 +308,7 @@ suite("commands.ts - getCommands()", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 10 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -317,6 +333,7 @@ suite("commands.ts - getCommands()", () => {
         range: { start: { line: 0, character: 10 }, end: { line: 0, character: 19 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -361,6 +378,7 @@ suite("commands.ts - Edit Generation", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg",
         rule: "semi-colon",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -387,6 +405,7 @@ suite("commands.ts - Edit Generation", () => {
         range: { start: { line: 0, character: 4 }, end: { line: 0, character: 23 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 
@@ -416,6 +435,7 @@ suite("commands.ts - Edit Generation", () => {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 19 } },
         message: "msg",
         rule: "test-rule",
+        severity: DiagnosticSeverity.Error,
       },
     ]);
 

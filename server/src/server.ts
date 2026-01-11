@@ -10,7 +10,6 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   createConnection,
   Diagnostic,
-  DiagnosticSeverity,
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
@@ -187,7 +186,7 @@ async function ValidateBuffer(textDocument: TextDocument, shouldFix: boolean): P
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
   function toDiagnostic(lintError: ITsqlLintError): Diagnostic {
     return {
-      severity: DiagnosticSeverity.Error,
+      severity: lintError.severity,
       range: lintError.range,
       message: lintError.message,
       source: `TSQLLint: ${lintError.rule}`,
