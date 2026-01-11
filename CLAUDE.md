@@ -97,7 +97,7 @@ This extension follows the Language Server Protocol pattern with abstraction lay
 ### Key Server Components
 
 **TSQLLintToolsHelper** ([server/src/TSQLLintToolsHelper.ts](server/src/TSQLLintToolsHelper.ts))
-- Downloads and manages the TSQLLint runtime binaries (v1.11.0)
+- Downloads and manages the TSQLLint runtime binaries (v1.16.0)
 - Uses `PlatformAdapter` for OS detection
 - Uses `FileSystemAdapter` for file operations
 - Uses `BinaryExecutor` for spawning processes
@@ -289,7 +289,7 @@ npm run test:all              # Alias for test:ci
 **Location:** `client/src/test/e2e/suite/e2e.test.ts`
 
 **Characteristics:**
-- Downloads actual TSQLLint v1.11.0 binary on first run
+- Downloads actual TSQLLint v1.16.0 binary on first run
 - Tests complete validation flow end-to-end
 - Uses SQL fixture files with known linting errors
 - Tests are run locally only (development/pre-release verification)

@@ -347,7 +347,7 @@ suite("TSQLLintToolsHelper - Download URL Verification", () => {
     promise
       .then(() => {
         assert.ok(downloadedUrl.includes("github.com/tsqllint/tsqllint"));
-        assert.ok(downloadedUrl.includes("v1.11.0"));
+        assert.ok(downloadedUrl.includes("v1.16.0"));
         assert.ok(downloadedUrl.includes(".tgz"));
         done();
       })
