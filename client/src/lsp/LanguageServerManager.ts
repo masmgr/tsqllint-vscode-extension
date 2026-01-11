@@ -42,7 +42,7 @@ export class VSCodeLanguageServerManager implements ILanguageServerManager {
   }
 
   onReady(): Promise<void> {
-    return this.client.onReady();
+    return this.client.start();
   }
 
   getClient(): LanguageClient {
