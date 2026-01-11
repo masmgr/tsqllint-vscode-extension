@@ -32,16 +32,50 @@ npm run vscode:prepublish
 
 ## Architecture
 
-### Client-Server Architecture
+### Client-Server Architecture with Boundary Modules
 
-This extension follows the Language Server Protocol pattern with two separate modules:
+This extension follows the Language Server Protocol pattern with abstraction layers that isolate framework dependencies. This architecture enables safe upgrades of vscode-languageclient and VS Code API without requiring changes to business logic.
+
+```
+┌─────────────────────────────────────────┐
+│  VS Code API (window, workspace, etc)  │
+└──────────────────┬──────────────────────┘
+                   │
+         ┌─────────▼────────────┐
+         │ EditorService        │
+         │ ProtocolConverter    │
+         │ (Boundary Layer)     │
+         └──────────┬───────────┘
+                    │
+      ┌─────────────▼────────────┐
+      │  extension.ts (40 lines) │
+      │  Business Logic          │
+      └──────────────┬───────────┘
+                     │
+      ┌──────────────▼───────────────┐
+      │ LanguageServerManager        │
+      │ (vscode-languageclient wrap) │
+      └──────────────┬───────────────┘
+                     │
+              [IPC Communication]
+                     │
+      ┌──────────────▼────────────┐
+      │ LSP Connection & LSP Types│
+      │ (Server-Side)            │
+      └────────────────────────────┘
+```
 
 **Client** ([client/src/extension.ts](client/src/extension.ts))
-- Entry point: `activate()` function
-- Initializes the Language Server Client
-- Registers commands: `tsqlLint.fix` (auto-fix command)
-- Handles communication between VS Code and the language server
-- Applies text edits received from the server via the `_tsql-lint.change` command
+- Entry point: `activate()` function (40 lines vs previous 69)
+- Initializes Language Server via `LanguageServerManager` (boundary module)
+- Registers command: `tsqlLint.fix` (auto-fix command)
+- Uses `EditorService` for all VS Code API interactions
+- No direct dependencies on vscode-languageclient internals
+
+**Client Boundary Modules:**
+- [client/src/lsp/LanguageServerManager.ts](client/src/lsp/LanguageServerManager.ts) - Wraps vscode-languageclient lifecycle
+- [client/src/vscode/EditorService.ts](client/src/vscode/EditorService.ts) - Abstracts VS Code window/workspace APIs
+- [client/src/lsp/ProtocolConverter.ts](client/src/lsp/ProtocolConverter.ts) - Isolates protocol conversion (protocol2CodeConverter usage)
 
 **Server** ([server/src/server.ts](server/src/server.ts))
 - Runs as a separate process communicating via IPC
@@ -50,21 +84,33 @@ This extension follows the Language Server Protocol pattern with two separate mo
 - Processes fix requests (`fix` notification)
 - Implements auto-fix on save when `tsqlLint.autoFixOnSave` is enabled
 
+**Server Boundary Modules:**
+- [server/src/lsp/LSPConnectionAdapter.ts](server/src/lsp/LSPConnectionAdapter.ts) - Wraps vscode-languageserver connection (encapsulates WorkspaceEdit quirks)
+- [server/src/lsp/DocumentManager.ts](server/src/lsp/DocumentManager.ts) - Manages document lifecycle
+- [server/src/validation/DiagnosticConverter.ts](server/src/validation/DiagnosticConverter.ts) - Converts errors to diagnostics
+
+**Platform Abstraction Layer:**
+- [server/src/platform/PlatformAdapter.ts](server/src/platform/PlatformAdapter.ts) - Detects OS and architecture (osx-x64, linux-x64, win-x86, win-x64)
+- [server/src/platform/FileSystemAdapter.ts](server/src/platform/FileSystemAdapter.ts) - Async file operations (replaces sync calls)
+- [server/src/platform/BinaryExecutor.ts](server/src/platform/BinaryExecutor.ts) - Spawns TSQLLint.Console binary
+
 ### Key Server Components
 
 **TSQLLintToolsHelper** ([server/src/TSQLLintToolsHelper.ts](server/src/TSQLLintToolsHelper.ts))
 - Downloads and manages the TSQLLint runtime binaries (v1.11.0)
-- Platform detection: macOS (osx-x64), Linux (linux-x64), Windows (win-x86, win-x64)
-- Downloads from GitHub releases on first use
+- Uses `PlatformAdapter` for OS detection
+- Uses `FileSystemAdapter` for file operations
+- Uses `BinaryExecutor` for spawning processes
 - Caches binaries in `<extension-root>/tsqllint/`
 
 **Validation Flow** ([server/src/server.ts](server/src/server.ts))
-1. Creates temporary file from document content (`TempFilePath()`)
-2. Spawns platform-specific TSQLLint.Console binary via `LintBuffer()`
-3. Parses stdout for error messages (`parseErrors()` from [server/src/parseError.ts](server/src/parseError.ts))
-4. Converts errors to VS Code diagnostics
-5. Sends diagnostics back to client
-6. Cleans up temporary file
+1. Document change triggers validation via `DocumentManager`
+2. Creates temporary file using `FileSystemAdapter`
+3. Spawns TSQLLint.Console via `BinaryExecutor` with platform detection by `PlatformAdapter`
+4. Parses stdout for error messages (`parseErrors()` from [server/src/parseError.ts](server/src/parseError.ts))
+5. Converts errors to diagnostics via `DiagnosticConverter`
+6. Sends diagnostics to client via `LSPConnectionAdapter`
+7. Cleans up temporary file via `FileSystemAdapter`
 
 **Commands** ([server/src/commands.ts](server/src/commands.ts))
 - Generates code actions for each diagnostic
@@ -76,6 +122,21 @@ This extension follows the Language Server Protocol pattern with two separate mo
 - Parses TSQLLint output format: `(line,col): rule: message`
 - Converts to LSP Range objects
 - Highlights entire line from first non-whitespace to end
+
+### Boundary Module Benefits
+
+The boundary module architecture provides:
+
+1. **Framework Isolation**: Changes to vscode-languageclient or VS Code APIs are contained to boundary modules
+2. **Testability**: Business logic can be tested independently without framework dependencies
+3. **Portability**: Potential support for other editors (Theia, VS Code Web) by implementing alternative adapters
+4. **Maintainability**: Clear separation of concerns reduces cognitive load
+5. **Future-Proof**: Safe version upgrades without rewriting core logic
+
+**Example**: Upgrading vscode-languageclient from v7 to v9 would only require changes to:
+- `LanguageServerManager.ts`
+- `LSPConnectionAdapter.ts`
+- (Remaining ~200 lines of code unchanged)
 
 ### Configuration
 
@@ -96,13 +157,17 @@ Both use ES2020 target with CommonJS modules.
 
 ## Important Implementation Details
 
-### Text Edits (server.ts:71-80)
+### Text Edits (LSPConnectionAdapter.ts:36-46)
 
-When applying workspace edits, use `{ uri, version }` identifier format instead of passing the full TextDocument object to `TextDocumentEdit.create()`. Passing TextDocument will cause vague "Unknown workspace edit change received" errors.
+When applying workspace edits, use `{ uri, version }` identifier format instead of passing the full TextDocument object to `TextDocumentEdit.create()`. Passing TextDocument will cause vague "Unknown workspace edit change received" errors. This quirk is now encapsulated in `LSPConnectionAdapter.applyWorkspaceEdit()` to prevent future developers from encountering the same issue.
 
 ### Platform-Specific Binary Spawning
 
-The server spawns different TSQLLint.Console binaries based on platform detection in `LintBuffer()`. On Windows, it also detects process architecture (ia32 vs x64).
+The server spawns different TSQLLint.Console binaries based on platform detection in `BinaryExecutor.execute()`. Platform detection is abstracted via `PlatformAdapter.getPlatform()`:
+- **macOS**: `osx-x64/TSQLLint.Console`
+- **Linux**: `linux-x64/TSQLLint.Console`
+- **Windows x86**: `win-x86/TSQLLint.Console.exe`
+- **Windows x64**: `win-x64/TSQLLint.Console.exe`
 
 ### Auto-Fix Flow
 
