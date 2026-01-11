@@ -21,4 +21,8 @@ jobs:
 
       - run: npm ci
       - run: npm run compile
+      - name: Run smoke tests
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" npm run test
+        env:
+          CI: true
       - run: npm run lint

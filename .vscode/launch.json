@@ -21,6 +21,21 @@
 			"port": 6009,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceRoot}/server/out/**/*.js"]
+		},
+		{
+			"name": "Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/client/out/test/suite",
+				"--disable-extensions",
+				"--disable-workspace-trust"
+			],
+			"outFiles": [
+				"${workspaceFolder}/client/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: compile"
 		}
 	],
 	"compounds": [

@@ -2,3 +2,4 @@ out/
 node_modules/
 *.vsix
 .claude/
+.vscode-test/
