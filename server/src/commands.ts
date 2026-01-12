@@ -46,11 +46,7 @@ export function registerFileErrors(file: TextDocument, errors: ITsqlLintError[])
 
 export function getCommands(params: CodeActionParams): Command[] {
   const commands = findCommands(params.textDocument.uri, params.range);
-  return [
-    ...getDisableCommands(),
-    // TODO fix/fixall commands
-    // TODO documentation commands
-  ];
+  return [...getDisableCommands()];
   function findCommands(fileUri: string, { start, end }: server.Range): IDiagnosticCommands[] {
     const fileCommands = commandStore[fileUri] || [];
     return fileCommands.filter(({ error }): boolean => {
