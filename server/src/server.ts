@@ -34,7 +34,7 @@ interface TsqlLintSettings {
 const defaultSettings: TsqlLintSettings = { autoFixOnSave: false };
 let globalSettings: TsqlLintSettings = defaultSettings;
 
-connection.onDidChangeConfiguration((change) => {
+connection.onDidChangeConfiguration(change => {
   globalSettings = (change.settings.tsqlLint || defaultSettings) as TsqlLintSettings;
 });
 
@@ -55,7 +55,7 @@ connection.onInitialize((params: InitializeParams) => ({
 
 connection.onCodeAction(getCommands);
 
-documents.onDidChangeContent(async (change) => {
+documents.onDidChangeContent(async change => {
   await ValidateBuffer(change.document, null);
 });
 
@@ -75,7 +75,7 @@ connection.onNotification("fix", async (uri: string) => {
   await connection.workspace.applyEdit(workspaceEdit);
 });
 
-documents.onWillSaveWaitUntil((e) => getTextEdit(e.document));
+documents.onWillSaveWaitUntil(e => getTextEdit(e.document));
 
 async function getTextEdit(d: TextDocument, force: boolean = false): Promise<TextEdit[]> {
   if (!force && !globalSettings.autoFixOnSave) {
@@ -145,7 +145,7 @@ async function LintBuffer(fileUri: string, shouldFix: boolean): Promise<string[]
       const list: string[] = result.split("\n");
       const resultsArr: string[] = [];
 
-      list.forEach((element) => {
+      list.forEach(element => {
         const index = element.indexOf("(");
         if (index > 0) {
           resultsArr.push(element.substring(index, element.length - 1));

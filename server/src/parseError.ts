@@ -9,7 +9,7 @@ export interface ITsqlLintError {
 
 export function parseErrors(docText: string, errorStrings: string[]): ITsqlLintError[] {
   const lines = docText.split("\n");
-  const lineStarts = lines.map((line) => line.match(/^\s*/)?.[0]?.length ?? 0);
+  const lineStarts = lines.map(line => line.match(/^\s*/)?.[0]?.length ?? 0);
 
   return errorStrings.map(parseError).filter(isValidError);
 
@@ -21,7 +21,7 @@ export function parseErrors(docText: string, errorStrings: string[]): ITsqlLintE
       const parts: string[] = errorString.split(":");
 
       const positionStr: string = (parts[0] ?? "").replace("(", "").replace(")", "");
-      const positionArr: number[] = positionStr.split(",").map((v) => Number(v.trim()));
+      const positionArr: number[] = positionStr.split(",").map(v => Number(v.trim()));
 
       const rawLine = positionArr[0];
       const line = Number.isFinite(rawLine) ? Math.max(rawLine - 1, 0) : -1;

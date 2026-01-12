@@ -7,7 +7,7 @@ export interface IDiagnosticConverter {
 
 export class DiagnosticConverter implements IDiagnosticConverter {
   toDiagnostics(errors: ITsqlLintError[]): Diagnostic[] {
-    return errors.map((error) => ({
+    return errors.map(error => ({
       severity: error.severity,
       range: error.range,
       message: `${error.rule}: ${error.message}`,

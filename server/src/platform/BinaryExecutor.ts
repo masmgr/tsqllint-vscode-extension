@@ -31,7 +31,7 @@ export class NodeBinaryExecutor implements IBinaryExecutor {
           const lines = result.split("\n");
           const resultsArr: string[] = [];
 
-          lines.forEach((element) => {
+          lines.forEach(element => {
             const index = element.indexOf("(");
             if (index > 0) {
               resultsArr.push(element.substring(index, element.length - 1));

@@ -1,4 +1,4 @@
-const ignoreAllRules = true;
+const ignoreAllRules = false;
 
 const baseIgnores = [
   "**/out/**",

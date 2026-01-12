@@ -22,12 +22,12 @@ export class VSCodeDocumentManager implements IDocumentManager {
   }
 
   onDidChangeContent(handler: (doc: ITextDocument) => void): void {
-    this.documents.onDidChangeContent((change) => {
+    this.documents.onDidChangeContent(change => {
       handler(change.document);
     });
   }
 
   onWillSaveWaitUntil(handler: (doc: ITextDocument) => Promise<TextEdit[]>): void {
-    this.documents.onWillSaveWaitUntil((e) => handler(e.document));
+    this.documents.onWillSaveWaitUntil(e => handler(e.document));
   }
 }

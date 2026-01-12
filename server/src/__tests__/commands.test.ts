@@ -31,7 +31,7 @@ suite("commands.ts - registerFileErrors()", () => {
     const commands = getCommands(params);
     assert.ok(commands.length > 0, "Commands should be registered");
     assert.ok(
-      commands.some((cmd) => cmd.title.includes("semi-colon")),
+      commands.some(cmd => cmd.title.includes("semi-colon")),
       "Should include semi-colon rule"
     );
   });
@@ -132,7 +132,7 @@ suite("commands.ts - registerFileErrors()", () => {
     };
 
     const commands = getCommands(params);
-    const disableLineCmd = commands.find((cmd) => cmd.title.includes("for this line"));
+    const disableLineCmd = commands.find(cmd => cmd.title.includes("for this line"));
 
     assert.ok(disableLineCmd);
 
@@ -176,7 +176,7 @@ suite("commands.ts - registerFileErrors()", () => {
 
     // Should only have rule2 commands (rule1 should be replaced)
     assert.ok(
-      commands.every((cmd) => cmd.title.includes("rule2")),
+      commands.every(cmd => cmd.title.includes("rule2")),
       "Should only include rule2 after update"
     );
   });
@@ -206,7 +206,7 @@ suite("commands.ts - getCommands()", () => {
     };
 
     const commands = getCommands(params);
-    const disableLineCmd = commands.find((cmd) => cmd.title.includes("for this line"));
+    const disableLineCmd = commands.find(cmd => cmd.title.includes("for this line"));
 
     assert.ok(disableLineCmd);
     assert.strictEqual(disableLineCmd.title, "Disable: test-rule for this line");
@@ -230,7 +230,7 @@ suite("commands.ts - getCommands()", () => {
     };
 
     const commands = getCommands(params);
-    const disableFileCmd = commands.find((cmd) => cmd.title.includes("for this file"));
+    const disableFileCmd = commands.find(cmd => cmd.title.includes("for this file"));
 
     assert.ok(disableFileCmd);
     assert.strictEqual(disableFileCmd.title, "Disable: test-rule for this file");
@@ -268,8 +268,8 @@ suite("commands.ts - getCommands()", () => {
 
     // 2 errors * 2 commands = 4
     assert.strictEqual(commands.length, 4);
-    assert.ok(commands.some((cmd) => cmd.title.includes("rule1")));
-    assert.ok(commands.some((cmd) => cmd.title.includes("rule2")));
+    assert.ok(commands.some(cmd => cmd.title.includes("rule1")));
+    assert.ok(commands.some(cmd => cmd.title.includes("rule2")));
   });
 
   test("should filter out errors outside range", () => {
@@ -298,8 +298,8 @@ suite("commands.ts - getCommands()", () => {
     const commands = getCommands(params);
 
     // Should only include rule1 (line 0)
-    assert.ok(commands.every((cmd) => cmd.title.includes("rule1")));
-    assert.ok(!commands.some((cmd) => cmd.title.includes("rule2")));
+    assert.ok(commands.every(cmd => cmd.title.includes("rule1")));
+    assert.ok(!commands.some(cmd => cmd.title.includes("rule2")));
   });
 
   test("should handle edge case: error at range start", () => {
@@ -389,7 +389,7 @@ suite("commands.ts - Edit Generation", () => {
     };
 
     const commands = getCommands(params);
-    const disableLineCmd = commands.find((cmd) => cmd.title.includes("for this line"));
+    const disableLineCmd = commands.find(cmd => cmd.title.includes("for this line"));
 
     const editArray = disableLineCmd.arguments[2];
     const newText = editArray[0].newText;
@@ -416,7 +416,7 @@ suite("commands.ts - Edit Generation", () => {
     };
 
     const commands = getCommands(params);
-    const disableLineCmd = commands.find((cmd) => cmd.title.includes("for this line"));
+    const disableLineCmd = commands.find(cmd => cmd.title.includes("for this line"));
 
     const editArray = disableLineCmd.arguments[2];
     const newText = editArray[0].newText;
@@ -446,7 +446,7 @@ suite("commands.ts - Edit Generation", () => {
     };
 
     const commands = getCommands(params);
-    const disableFileCmd = commands.find((cmd) => cmd.title.includes("for this file"));
+    const disableFileCmd = commands.find(cmd => cmd.title.includes("for this file"));
 
     const editArray = disableFileCmd.arguments[2];
     const edit = editArray[0];

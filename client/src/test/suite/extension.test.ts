@@ -7,7 +7,7 @@ suite("Extension Smoke Tests", () => {
     assert.ok(extension, "Extension tsqllint.tsqllint should be present");
   });
 
-  test("Extension should activate on SQL file", async function () {
+  test("Extension should activate on SQL file", async function() {
     this.timeout(30000);
 
     // Create a temporary SQL document to trigger activation
@@ -41,7 +41,7 @@ suite("Extension Smoke Tests", () => {
 
 // Priority: High
 suite("Language Server Initialization Tests", () => {
-  test("Language Server Client should be initialized", async function () {
+  test("Language Server Client should be initialized", async function() {
     this.timeout(30000);
 
     // Create a temporary SQL document to trigger activation
@@ -69,7 +69,7 @@ suite("Language Server Initialization Tests", () => {
     assert.ok(commands.includes("tsqlLint.fix"), "Language Server Client should register the fix command");
   });
 
-  test("tsqlLint.fix command should be executable", async function () {
+  test("tsqlLint.fix command should be executable", async function() {
     this.timeout(30000);
 
     // Create and show a SQL document
@@ -99,7 +99,7 @@ suite("Language Server Initialization Tests", () => {
 
 // Priority: Medium
 suite("Configuration Tests", () => {
-  test("Default configuration should be correct", async function () {
+  test("Default configuration should be correct", async function() {
     const config = vscode.workspace.getConfiguration("tsqlLint");
 
     // Verify default values
@@ -110,7 +110,7 @@ suite("Configuration Tests", () => {
     assert.strictEqual(traceServer, "off", "trace.server should default to off");
   });
 
-  test("Configuration changes should be applied", async function () {
+  test("Configuration changes should be applied", async function() {
     this.timeout(30000);
 
     const config = vscode.workspace.getConfiguration("tsqlLint");
@@ -133,7 +133,7 @@ suite("Configuration Tests", () => {
     }
   });
 
-  test("Extension should handle empty SQL files gracefully", async function () {
+  test("Extension should handle empty SQL files gracefully", async function() {
     this.timeout(30000);
 
     // Create and show an empty SQL document
@@ -150,13 +150,13 @@ suite("Configuration Tests", () => {
     }
 
     // Wait for any processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Verify extension is still active
     assert.strictEqual(extension.isActive, true, "Extension should remain active after opening empty file");
   });
 
-  test("Document changes should trigger extension processing", async function () {
+  test("Document changes should trigger extension processing", async function() {
     this.timeout(30000);
 
     // Create and show a SQL document
@@ -173,7 +173,7 @@ suite("Configuration Tests", () => {
     }
 
     // Edit the document
-    const editApplied = await editor.edit((editBuilder) => {
+    const editApplied = await editor.edit(editBuilder => {
       const lastLine = doc.lineCount - 1;
       const lastCharacter = doc.lineAt(lastLine).text.length;
       editBuilder.insert(new vscode.Position(lastLine, lastCharacter), "\nSELECT * FROM orders;");
@@ -182,7 +182,7 @@ suite("Configuration Tests", () => {
     assert.strictEqual(editApplied, true, "Edit should be applied successfully");
 
     // Wait for extension to process change
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Verify extension is still active after changes
     assert.strictEqual(extension.isActive, true, "Extension should remain active after document changes");

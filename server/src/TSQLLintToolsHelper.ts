@@ -1,13 +1,13 @@
 "use strict";
 
+import * as fs from "fs";
+import * as os from "os";
 // tslint:disable-next-line:no-var-requires
 const https = require("follow-redirects").https;
 // tslint:disable-next-line:no-var-requires
 const decompress = require("decompress");
 // tslint:disable-next-line:no-var-requires
 const decompressTargz = require("decompress-targz");
-import * as fs from "fs";
-import * as os from "os";
 
 export default class TSQLLintRuntimeHelper {
   public static DownloadRuntime(installDirectory: string): Promise<string> {

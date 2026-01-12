@@ -120,7 +120,7 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
     sinon.restore();
   });
 
-  test("should handle network errors gracefully", (done) => {
+  test("should handle network errors gracefully", done => {
     // Create a mock request that emits an error
     const mockRequest = new EventEmitter() as any;
 
@@ -148,7 +148,7 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       });
   });
 
-  test("should handle 404 errors", (done) => {
+  test("should handle 404 errors", done => {
     const mockRequest = new EventEmitter() as any;
     const mockResponse = new EventEmitter() as any;
     mockResponse.statusCode = 404;
@@ -181,7 +181,7 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       });
   });
 
-  test("should handle 500 server errors", (done) => {
+  test("should handle 500 server errors", done => {
     const mockRequest = new EventEmitter() as any;
     const mockResponse = new EventEmitter() as any;
     mockResponse.statusCode = 500;
@@ -214,7 +214,7 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       });
   });
 
-  test("should cleanup partial download on error", (done) => {
+  test("should cleanup partial download on error", done => {
     const mockRequest = new EventEmitter() as any;
     const mockResponse = new EventEmitter() as any;
     mockResponse.statusCode = 503;
@@ -272,7 +272,7 @@ suite("TSQLLintToolsHelper - Download Directory Creation", () => {
     sinon.restore();
   });
 
-  test("should create installation directory if it doesn't exist", (done) => {
+  test("should create installation directory if it doesn't exist", done => {
     const mockRequest = new EventEmitter() as any;
     const mockResponse = new EventEmitter() as any;
     mockResponse.statusCode = 200;
@@ -313,7 +313,7 @@ suite("TSQLLintToolsHelper - Download URL Verification", () => {
     sinon.restore();
   });
 
-  test("should download from correct GitHub URL", (done) => {
+  test("should download from correct GitHub URL", done => {
     let downloadedUrl = "";
 
     const mockRequest = new EventEmitter() as any;
