@@ -9,9 +9,6 @@ import {
   TextDocuments,
   TextDocumentSyncKind,
   TextEdit,
-  TextDocumentEdit,
-  WorkspaceEdit,
-  InitializeParams,
 } from "vscode-languageserver/node";
 import * as uid from "uid-safe";
 import TSQLLintRuntimeHelper from "./TSQLLintToolsHelper";
@@ -22,10 +19,12 @@ import { NodePlatformAdapter } from "./platform/PlatformAdapter";
 import { NodeBinaryExecutor } from "./platform/BinaryExecutor";
 import { VSCodeDocumentManager, IDocumentManager } from "./lsp/DocumentManager";
 import { DiagnosticConverter } from "./validation/DiagnosticConverter";
+import { ILSPConnection, VSCodeLSPConnection } from "./lsp/LSPConnectionAdapter";
 
 const applicationRoot = path.parse(process.argv[1]);
 
 const connection = createConnection(ProposedFeatures.all);
+const lspConnection: ILSPConnection = new VSCodeLSPConnection(connection);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 const documentManager: IDocumentManager = new VSCodeDocumentManager(documents);
 
@@ -36,13 +35,13 @@ interface TsqlLintSettings {
 const defaultSettings: TsqlLintSettings = { autoFixOnSave: false };
 let globalSettings: TsqlLintSettings = defaultSettings;
 
-connection.onDidChangeConfiguration(change => {
+lspConnection.onDidChangeConfiguration(change => {
   globalSettings = (change.settings.tsqlLint || defaultSettings) as TsqlLintSettings;
 });
 
 documents.listen(connection);
 
-connection.onInitialize((params: InitializeParams) => ({
+lspConnection.onInitialize((): any => ({
   capabilities: {
     textDocumentSync: {
       openClose: true,
@@ -55,26 +54,16 @@ connection.onInitialize((params: InitializeParams) => ({
   },
 }));
 
-connection.onCodeAction(getCommands);
+lspConnection.onCodeAction(getCommands);
 
 documentManager.onDidChangeContent(async document => {
   await ValidateBuffer(document as TextDocument, null);
 });
 
-connection.onNotification("fix", async (uri: string) => {
+lspConnection.onNotification("fix", async (uri: string) => {
   const textDocument = documentManager.getDocument(uri);
   const edits = await getTextEdit(textDocument as TextDocument, true);
-  // The fuckery that I wasted 6 hours on...
-  // IMPORTANT! It's syntactially correct to pass textDocument to TextDocumentEdit.create, but it won't work.
-  // You'll get a very vauge error like:
-  // ResponseError: Request workspace/applyEdit failed with message: Unknown workspace edit change received:
-  // Shoutout to finally finding this issues and looking to see how he fixed it.
-  // https://github.com/stylelint/vscode-stylelint/issues/329
-  // https://github.com/stylelint/vscode-stylelint/compare/v1.2.0..v1.2.1
-  const identifier = { uri: textDocument.uri, version: textDocument.version };
-  const textDocumentEdits = TextDocumentEdit.create(identifier, edits);
-  const workspaceEdit: WorkspaceEdit = { documentChanges: [textDocumentEdits] };
-  await connection.workspace.applyEdit(workspaceEdit);
+  await lspConnection.applyWorkspaceEdit(textDocument.uri, textDocument.version, edits);
 });
 
 documentManager.onWillSaveWaitUntil(document => getTextEdit(document as TextDocument));
@@ -146,7 +135,7 @@ async function ValidateBuffer(textDocument: TextDocument, shouldFix: boolean): P
   registerFileErrors(textDocument, errors);
   const diagnostics = diagnosticConverter.toDiagnostics(errors);
 
-  connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+  lspConnection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 
   let updated = null;
 
