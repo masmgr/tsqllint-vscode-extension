@@ -21,11 +21,14 @@ import { getCommands, registerFileErrors } from "./commands";
 import { NodeFileSystemAdapter } from "./platform/FileSystemAdapter";
 import { NodePlatformAdapter } from "./platform/PlatformAdapter";
 import { NodeBinaryExecutor } from "./platform/BinaryExecutor";
+import { VSCodeDocumentManager, IDocumentManager } from "./lsp/DocumentManager";
 
 const applicationRoot = path.parse(process.argv[1]);
 
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+const documentManager: IDocumentManager = new VSCodeDocumentManager(documents);
+
 interface TsqlLintSettings {
   autoFixOnSave: boolean;
 }
@@ -54,13 +57,13 @@ connection.onInitialize((params: InitializeParams) => ({
 
 connection.onCodeAction(getCommands);
 
-documents.onDidChangeContent(async change => {
-  await ValidateBuffer(change.document, null);
+documentManager.onDidChangeContent(async document => {
+  await ValidateBuffer(document as TextDocument, null);
 });
 
 connection.onNotification("fix", async (uri: string) => {
-  const textDocument = documents.get(uri);
-  const edits = await getTextEdit(textDocument, true);
+  const textDocument = documentManager.getDocument(uri);
+  const edits = await getTextEdit(textDocument as TextDocument, true);
   // The fuckery that I wasted 6 hours on...
   // IMPORTANT! It's syntactially correct to pass textDocument to TextDocumentEdit.create, but it won't work.
   // You'll get a very vauge error like:
@@ -74,7 +77,7 @@ connection.onNotification("fix", async (uri: string) => {
   await connection.workspace.applyEdit(workspaceEdit);
 });
 
-documents.onWillSaveWaitUntil(e => getTextEdit(e.document));
+documentManager.onWillSaveWaitUntil(document => getTextEdit(document as TextDocument));
 
 async function getTextEdit(d: TextDocument, force: boolean = false): Promise<TextEdit[]> {
   if (!force && !globalSettings.autoFixOnSave) {
