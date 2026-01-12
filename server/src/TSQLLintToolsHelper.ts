@@ -15,7 +15,7 @@ export default class TSQLLintRuntimeHelper {
 
   public DownloadRuntime(installDirectory: string): Promise<string> {
     const version = TSQLLintRuntimeHelper._tsqllintVersion;
-    const platform = TSQLLintRuntimeHelper._runTime;
+    const platform = this.platformAdapter.getPlatform();
     const urlBase: string = `https://github.com/tsqllint/tsqllint/releases/download/${version}`;
     const downloadUrl: string = `${urlBase}/${platform}.tgz`;
     const downloadFilePath: string = `${installDirectory}/${platform}.tgz`;
@@ -69,12 +69,10 @@ export default class TSQLLintRuntimeHelper {
 
   private static _tsqllintVersion: string = "v1.16.0";
   private static _applicationRootDirectory: string;
-  private static _runTime: string;
   private static _tsqllintToolsPath: string;
 
   constructor(applicationRootDirectory: string) {
     TSQLLintRuntimeHelper._applicationRootDirectory = applicationRootDirectory;
-    TSQLLintRuntimeHelper._runTime = this.platformAdapter.getPlatform();
   }
 
   public async TSQLLintRuntime(): Promise<string> {
@@ -84,7 +82,8 @@ export default class TSQLLintRuntimeHelper {
       }
 
       const tsqllintInstallDirectory: string = `${TSQLLintRuntimeHelper._applicationRootDirectory}/tsqllint`;
-      this.fileSystemAdapter.exists(`${tsqllintInstallDirectory}/${TSQLLintRuntimeHelper._runTime}`).then(exists => {
+      const platform = this.platformAdapter.getPlatform();
+      this.fileSystemAdapter.exists(`${tsqllintInstallDirectory}/${platform}`).then(exists => {
         if (exists) {
           TSQLLintRuntimeHelper._tsqllintToolsPath = tsqllintInstallDirectory;
           return resolve(TSQLLintRuntimeHelper._tsqllintToolsPath);

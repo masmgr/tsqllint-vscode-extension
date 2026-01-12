@@ -71,12 +71,16 @@ suite("TSQLLintToolsHelper - Constructor & Platform Detection", () => {
     }
   });
 
-  test("should throw error for unsupported platform", () => {
+  test("should throw error for unsupported platform", async () => {
     const osStub = sinon.stub(os, "type").returns("SunOS");
     try {
-      assert.throws(() => {
-        new TSQLLintRuntimeHelper("/test");
-      }, /Unsupported platform/);
+      const helper = new TSQLLintRuntimeHelper("/test");
+      try {
+        await helper.TSQLLintRuntime();
+        assert.fail("Should have thrown an error for unsupported platform");
+      } catch (error: any) {
+        assert.match(error.message, /Unsupported platform/);
+      }
     } finally {
       osStub.restore();
     }
