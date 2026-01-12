@@ -3,7 +3,6 @@
 import { ChildProcess } from "child_process";
 
 import { spawn } from "child_process";
-import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -22,6 +21,7 @@ import * as uid from "uid-safe";
 import TSQLLintRuntimeHelper from "./TSQLLintToolsHelper";
 import { ITsqlLintError, parseErrors } from "./parseError";
 import { getCommands, registerFileErrors } from "./commands";
+import { NodeFileSystemAdapter } from "./platform/FileSystemAdapter";
 
 const applicationRoot = path.parse(process.argv[1]);
 
@@ -102,6 +102,7 @@ async function getTextEdit(d: TextDocument, force: boolean = false): Promise<Tex
 }
 
 const toolsHelper: TSQLLintRuntimeHelper = new TSQLLintRuntimeHelper(applicationRoot.dir);
+const fileSystemAdapter = new NodeFileSystemAdapter();
 
 async function LintBuffer(fileUri: string, shouldFix: boolean): Promise<string[]> {
   const toolsPath = await toolsHelper.TSQLLintRuntime();
@@ -167,7 +168,7 @@ function TempFilePath(textDocument: TextDocument) {
 
 async function ValidateBuffer(textDocument: TextDocument, shouldFix: boolean): Promise<string> {
   const tempFilePath: string = TempFilePath(textDocument);
-  fs.writeFileSync(tempFilePath, textDocument.getText());
+  await fileSystemAdapter.writeFile(tempFilePath, textDocument.getText());
 
   let lintErrorStrings;
 
@@ -195,10 +196,10 @@ async function ValidateBuffer(textDocument: TextDocument, shouldFix: boolean): P
   let updated = null;
 
   if (shouldFix) {
-    updated = fs.readFileSync(tempFilePath).toString();
+    updated = await fileSystemAdapter.readFile(tempFilePath);
   }
 
-  fs.unlinkSync(tempFilePath);
+  await fileSystemAdapter.deleteFile(tempFilePath);
 
   return updated;
 }
