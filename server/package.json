@@ -13,14 +13,16 @@
         "node": "*"
     },
     "dependencies": {
-        "@types/sinon": "^21.0.0",
         "@types/uid-safe": "^2.1.5",
         "decompress": "^4.2.1",
         "decompress-targz": "^4.1.1",
         "follow-redirects": "^1.15.11",
-        "sinon": "^21.0.1",
         "uid-safe": "^2.1.5",
         "vscode-languageserver": "^9.0.1",
         "vscode-languageserver-textdocument": "^1.0.12"
+    },
+    "devDependencies": {
+        "@types/sinon": "^21.0.0",
+        "sinon": "^21.0.1"
     }
 }
