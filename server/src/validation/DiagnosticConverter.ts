@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node";
+import { Diagnostic } from "vscode-languageserver/node";
 import { ITsqlLintError } from "../parseError";
 
 export interface IDiagnosticConverter {
@@ -10,8 +10,8 @@ export class DiagnosticConverter implements IDiagnosticConverter {
     return errors.map(error => ({
       severity: error.severity,
       range: error.range,
-      message: `${error.rule}: ${error.message}`,
-      source: "tsqllint",
+      message: error.message,
+      source: `TSQLLint: ${error.rule}`,
     }));
   }
 }

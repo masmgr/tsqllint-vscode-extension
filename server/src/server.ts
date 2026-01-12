@@ -5,7 +5,6 @@ import * as path from "path";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   createConnection,
-  Diagnostic,
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
@@ -16,12 +15,13 @@ import {
 } from "vscode-languageserver/node";
 import * as uid from "uid-safe";
 import TSQLLintRuntimeHelper from "./TSQLLintToolsHelper";
-import { ITsqlLintError, parseErrors } from "./parseError";
+import { parseErrors } from "./parseError";
 import { getCommands, registerFileErrors } from "./commands";
 import { NodeFileSystemAdapter } from "./platform/FileSystemAdapter";
 import { NodePlatformAdapter } from "./platform/PlatformAdapter";
 import { NodeBinaryExecutor } from "./platform/BinaryExecutor";
 import { VSCodeDocumentManager, IDocumentManager } from "./lsp/DocumentManager";
+import { DiagnosticConverter } from "./validation/DiagnosticConverter";
 
 const applicationRoot = path.parse(process.argv[1]);
 
@@ -107,6 +107,7 @@ const toolsHelper: TSQLLintRuntimeHelper = new TSQLLintRuntimeHelper(application
 const fileSystemAdapter = new NodeFileSystemAdapter();
 const platformAdapter = new NodePlatformAdapter();
 const binaryExecutor = new NodeBinaryExecutor();
+const diagnosticConverter = new DiagnosticConverter();
 
 async function LintBuffer(fileUri: string, shouldFix: boolean): Promise<string[]> {
   const toolsPath = await toolsHelper.TSQLLintRuntime();
@@ -143,17 +144,9 @@ async function ValidateBuffer(textDocument: TextDocument, shouldFix: boolean): P
 
   const errors = parseErrors(textDocument.getText(), lintErrorStrings);
   registerFileErrors(textDocument, errors);
-  const diagnostics = errors.map(toDiagnostic);
+  const diagnostics = diagnosticConverter.toDiagnostics(errors);
 
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-  function toDiagnostic(lintError: ITsqlLintError): Diagnostic {
-    return {
-      severity: lintError.severity,
-      range: lintError.range,
-      message: lintError.message,
-      source: `TSQLLint: ${lintError.rule}`,
-    };
-  }
 
   let updated = null;
 
