@@ -169,4 +169,48 @@ suite("BinaryExecutor", () => {
     await promise;
     assert(mockChildProcess.kill.notCalled, "kill() should not have been called");
   });
+
+  test("should handle empty stdout", async () => {
+    const mockChildProcess = new EventEmitter() as any;
+    mockChildProcess.stdout = new EventEmitter();
+    mockChildProcess.stderr = new EventEmitter();
+    mockChildProcess.kill = sandbox.stub();
+
+    sandbox.stub(require("child_process"), "spawn").returns(mockChildProcess);
+
+    const executor = new NodeBinaryExecutor();
+    const promise = executor.execute("/path/to/binary", ["arg1"]);
+
+    // No stdout data
+    setImmediate(() => {
+      mockChildProcess.emit("close");
+    });
+
+    const result = await promise;
+
+    assert.strictEqual(result.length, 0);
+  });
+
+  test("should handle process error after resolution", async () => {
+    const mockChildProcess = new EventEmitter() as any;
+    mockChildProcess.stdout = new EventEmitter();
+    mockChildProcess.stderr = new EventEmitter();
+    mockChildProcess.kill = sandbox.stub();
+
+    sandbox.stub(require("child_process"), "spawn").returns(mockChildProcess);
+
+    const executor = new NodeBinaryExecutor();
+    const promise = executor.execute("/path/to/binary", ["arg1"]);
+
+    // Emit close first, then error (should not affect result)
+    setImmediate(() => {
+      mockChildProcess.emit("close");
+      mockChildProcess.emit("error", new Error("Error after close"));
+    });
+
+    const result = await promise;
+
+    assert.strictEqual(result.length, 0);
+  });
+
 });
