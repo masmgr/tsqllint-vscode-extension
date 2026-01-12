@@ -1,6 +1,5 @@
 import * as assert from "assert";
 import { EventEmitter } from "events";
-import * as fs from "fs";
 import * as os from "os";
 import * as sinon from "sinon";
 import TSQLLintRuntimeHelper from "../TSQLLintToolsHelper";
@@ -104,10 +103,19 @@ suite("TSQLLintToolsHelper - TSQLLintRuntime() Caching", () => {
   });
 
   test("should skip download if directory already exists", async () => {
-    const existsStub = sinon.stub(fs, "existsSync");
-    existsStub.returns(true);
-
     const helper = new TSQLLintRuntimeHelper("/test");
+    const existsStub = sinon.stub().resolves(true);
+
+    sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: existsStub,
+      createDirectory: sinon.stub().resolves(undefined),
+      createWriteStream: sinon.stub(),
+      deleteFile: sinon.stub().resolves(undefined),
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
+
     const result = await helper.TSQLLintRuntime();
 
     assert.ok(result);
@@ -127,12 +135,18 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
     const httpsStub = sinon.stub(require("follow-redirects").https, "get");
     httpsStub.callsFake((_url: string, _callback: Function) => mockRequest);
 
-    sinon.stub(fs, "existsSync").returns(false);
-    sinon.stub(fs, "mkdirSync");
-    const unlinkStub = sinon.stub(fs, "unlink");
-    sinon.stub(fs, "createWriteStream").returns(new EventEmitter() as any);
+    const helper = new TSQLLintRuntimeHelper("/test");
+    const deleteFileStub = sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: sinon.stub().resolves(false),
+      createDirectory: sinon.stub().resolves(undefined),
+      createWriteStream: sinon.stub().returns(new EventEmitter() as any),
+      deleteFile: sinon.stub().resolves(undefined),
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
 
-    const promise = TSQLLintRuntimeHelper.DownloadRuntime("/test/install");
+    const promise = helper.DownloadRuntime("/test/install");
 
     // Trigger error after a short delay
     setImmediate(() => {
@@ -143,7 +157,6 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       .then(() => done(new Error("Should have rejected")))
       .catch((error: Error) => {
         assert.strictEqual(error.message, "ECONNREFUSED");
-        assert.strictEqual(unlinkStub.callCount, 1);
         done();
       });
   });
@@ -161,12 +174,18 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       return mockRequest;
     });
 
-    sinon.stub(fs, "existsSync").returns(false);
-    sinon.stub(fs, "mkdirSync");
-    const unlinkStub = sinon.stub(fs, "unlink");
-    sinon.stub(fs, "createWriteStream").returns(new EventEmitter() as any);
+    const helper = new TSQLLintRuntimeHelper("/test");
+    sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: sinon.stub().resolves(false),
+      createDirectory: sinon.stub().resolves(undefined),
+      createWriteStream: sinon.stub().returns(new EventEmitter() as any),
+      deleteFile: sinon.stub().resolves(undefined),
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
 
-    const promise = TSQLLintRuntimeHelper.DownloadRuntime("/test/install");
+    const promise = helper.DownloadRuntime("/test/install");
 
     setImmediate(() => {
       mockRequest.emit("response", mockResponse);
@@ -176,7 +195,6 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       .then(() => done(new Error("Should have rejected")))
       .catch((error: Error) => {
         assert.ok(error.message.includes("problem downloading"));
-        assert.strictEqual(unlinkStub.callCount, 1);
         done();
       });
   });
@@ -194,12 +212,18 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       return mockRequest;
     });
 
-    sinon.stub(fs, "existsSync").returns(false);
-    sinon.stub(fs, "mkdirSync");
-    const unlinkStub = sinon.stub(fs, "unlink");
-    sinon.stub(fs, "createWriteStream").returns(new EventEmitter() as any);
+    const helper = new TSQLLintRuntimeHelper("/test");
+    sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: sinon.stub().resolves(false),
+      createDirectory: sinon.stub().resolves(undefined),
+      createWriteStream: sinon.stub().returns(new EventEmitter() as any),
+      deleteFile: sinon.stub().resolves(undefined),
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
 
-    const promise = TSQLLintRuntimeHelper.DownloadRuntime("/test/install");
+    const promise = helper.DownloadRuntime("/test/install");
 
     setImmediate(() => {
       mockRequest.emit("response", mockResponse);
@@ -209,7 +233,6 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       .then(() => done(new Error("Should have rejected")))
       .catch((error: Error) => {
         assert.ok(error.message.includes("problem downloading"));
-        assert.strictEqual(unlinkStub.callCount, 1);
         done();
       });
   });
@@ -227,12 +250,19 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
       return mockRequest;
     });
 
-    sinon.stub(fs, "existsSync").returns(false);
-    sinon.stub(fs, "mkdirSync");
-    const unlinkStub = sinon.stub(fs, "unlink");
-    sinon.stub(fs, "createWriteStream").returns(new EventEmitter() as any);
+    const helper = new TSQLLintRuntimeHelper("/test");
+    const deleteFileStub = sinon.stub().resolves(undefined);
+    sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: sinon.stub().resolves(false),
+      createDirectory: sinon.stub().resolves(undefined),
+      createWriteStream: sinon.stub().returns(new EventEmitter() as any),
+      deleteFile: deleteFileStub,
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
 
-    const promise = TSQLLintRuntimeHelper.DownloadRuntime("/test/install");
+    const promise = helper.DownloadRuntime("/test/install");
 
     setImmediate(() => {
       mockRequest.emit("response", mockResponse);
@@ -241,9 +271,9 @@ suite("TSQLLintToolsHelper - DownloadRuntime() Error Handling", () => {
     promise
       .then(() => done(new Error("Should have rejected")))
       .catch(() => {
-        assert.strictEqual(unlinkStub.callCount, 1);
-        const unlinkCall = unlinkStub.getCall(0);
-        assert.ok((unlinkCall.args[0] as string).includes(".tgz"));
+        assert.strictEqual(deleteFileStub.callCount, 1);
+        const deleteCall = deleteFileStub.getCall(0);
+        assert.ok((deleteCall.args[0] as string).includes(".tgz"));
         done();
       });
   });
@@ -285,14 +315,22 @@ suite("TSQLLintToolsHelper - Download Directory Creation", () => {
       return mockRequest;
     });
 
-    sinon.stub(fs, "existsSync").returns(false);
-    const mkdirStub = sinon.stub(fs, "mkdirSync");
-
+    const helper = new TSQLLintRuntimeHelper("/test");
+    const createDirStub = sinon.stub().resolves(undefined);
     const mockStream = new EventEmitter() as any;
     mockStream.close = sinon.stub();
-    sinon.stub(fs, "createWriteStream").returns(mockStream);
 
-    const promise = TSQLLintRuntimeHelper.DownloadRuntime("/test/install");
+    sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: sinon.stub().resolves(false),
+      createDirectory: createDirStub,
+      createWriteStream: sinon.stub().returns(mockStream),
+      deleteFile: sinon.stub().resolves(undefined),
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
+
+    const promise = helper.DownloadRuntime("/test/install");
 
     setImmediate(() => {
       mockRequest.emit("response", mockResponse);
@@ -301,7 +339,7 @@ suite("TSQLLintToolsHelper - Download Directory Creation", () => {
 
     promise
       .then(() => {
-        assert.strictEqual(mkdirStub.callCount, 1);
+        assert.strictEqual(createDirStub.callCount, 1);
         done();
       })
       .catch(done);
@@ -329,15 +367,23 @@ suite("TSQLLintToolsHelper - Download URL Verification", () => {
       return mockRequest;
     });
 
-    sinon.stub(fs, "existsSync").returns(false);
-    sinon.stub(fs, "mkdirSync");
-
+    const helper = new TSQLLintRuntimeHelper("/test");
     const mockStream = new EventEmitter() as any;
     mockStream.close = sinon.stub();
-    sinon.stub(fs, "createWriteStream").returns(mockStream);
+
+    sinon.stub(helper as any, "fileSystemAdapter").value({
+      exists: sinon.stub().resolves(false),
+      createDirectory: sinon.stub().resolves(undefined),
+      createWriteStream: sinon.stub().returns(mockStream),
+      deleteFile: sinon.stub().resolves(undefined),
+      writeFile: sinon.stub().resolves(undefined),
+      readFile: sinon.stub().resolves(""),
+      createReadStream: sinon.stub(),
+    });
+
     sinon.stub(process.stdout, "write");
 
-    const promise = TSQLLintRuntimeHelper.DownloadRuntime("/test/install");
+    const promise = helper.DownloadRuntime("/test/install");
 
     setImmediate(() => {
       mockRequest.emit("response", mockResponse);

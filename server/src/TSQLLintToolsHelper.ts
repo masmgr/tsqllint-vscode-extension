@@ -1,7 +1,7 @@
 "use strict";
 
-import * as fs from "fs";
 import { NodePlatformAdapter } from "./platform/PlatformAdapter";
+import { NodeFileSystemAdapter, IFileSystemAdapter } from "./platform/FileSystemAdapter";
 // tslint:disable-next-line:no-var-requires
 const https = require("follow-redirects").https;
 // tslint:disable-next-line:no-var-requires
@@ -11,56 +11,59 @@ const decompressTargz = require("decompress-targz");
 
 export default class TSQLLintRuntimeHelper {
   private platformAdapter: NodePlatformAdapter = new NodePlatformAdapter();
-  public static DownloadRuntime(installDirectory: string): Promise<string> {
-    const urlBase: string = `https://github.com/tsqllint/tsqllint/releases/download/${this._tsqllintVersion}`;
-    const downloadUrl: string = `${urlBase}/${TSQLLintRuntimeHelper._runTime}.tgz`;
-    const downloadFilePath: string = `${installDirectory}/${TSQLLintRuntimeHelper._runTime}.tgz`;
-    const downloadPath: string = `${installDirectory}/${TSQLLintRuntimeHelper._runTime}.tgz`;
+  private fileSystemAdapter: IFileSystemAdapter = new NodeFileSystemAdapter();
+
+  public DownloadRuntime(installDirectory: string): Promise<string> {
+    const version = TSQLLintRuntimeHelper._tsqllintVersion;
+    const platform = TSQLLintRuntimeHelper._runTime;
+    const urlBase: string = `https://github.com/tsqllint/tsqllint/releases/download/${version}`;
+    const downloadUrl: string = `${urlBase}/${platform}.tgz`;
+    const downloadFilePath: string = `${installDirectory}/${platform}.tgz`;
+    const downloadPath: string = `${installDirectory}/${platform}.tgz`;
 
     return new Promise((resolve, reject) => {
       console.log(`Installing TSQLLint Runtime: ${downloadUrl}`);
-      if (!fs.existsSync(installDirectory)) {
-        fs.mkdirSync(installDirectory);
-      }
-      const file = fs.createWriteStream(downloadFilePath);
-      https
-        .get(downloadUrl, (response: any) => {
-          const length = Number(response.headers["content-length"]);
-          response.pipe(file);
-          process.stdout.write("Downloading...");
+      this.fileSystemAdapter.createDirectory(installDirectory).then(() => {
+        const file = this.fileSystemAdapter.createWriteStream(downloadFilePath);
+        https
+          .get(downloadUrl, (response: any) => {
+            const length = Number(response.headers["content-length"]);
+            response.pipe(file);
+            process.stdout.write("Downloading...");
 
-          if (!isNaN(length)) {
-            process.stdout.write(" [");
-            const max = 60;
-            let char = 0;
-            let bytes = 0;
-            response.on("data", (chunk: Buffer) => {
-              bytes += chunk.length;
-              const fill = Math.ceil((bytes / length) * max);
-              for (let i = char; i < fill; i++) {
-                process.stdout.write("=");
-              }
-              char = fill;
+            if (!isNaN(length)) {
+              process.stdout.write(" [");
+              const max = 60;
+              let char = 0;
+              let bytes = 0;
+              response.on("data", (chunk: Buffer) => {
+                bytes += chunk.length;
+                const fill = Math.ceil((bytes / length) * max);
+                for (let i = char; i < fill; i++) {
+                  process.stdout.write("=");
+                }
+                char = fill;
+              });
+              response.on("end", () => process.stdout.write("]\n"));
+            }
+            file.on("finish", () => {
+              file.close();
+              resolve(downloadPath);
             });
-            response.on("end", () => process.stdout.write("]\n"));
-          }
-          file.on("finish", () => {
-            file.close();
-            resolve(downloadPath);
+          })
+          .on("response", (res: any) => {
+            if (res.statusCode !== 200) {
+              this.fileSystemAdapter.deleteFile(downloadPath).catch(() => {});
+              return reject(
+                new Error(`There was a problem downloading the TSQLLint Runtime. Reload VS Code to try again`)
+              );
+            }
+          })
+          .on("error", (err: Error) => {
+            this.fileSystemAdapter.deleteFile(downloadPath).catch(() => {});
+            reject(err);
           });
-        })
-        .on("response", (res: any) => {
-          if (res.statusCode !== 200) {
-            fs.unlink(downloadPath, () => {});
-            return reject(
-              new Error(`There was a problem downloading the TSQLLint Runtime. Reload VS Code to try again`)
-            );
-          }
-        })
-        .on("error", (err: Error) => {
-          fs.unlink(downloadPath, () => {});
-          reject(err);
-        });
+      }).catch(reject);
     });
   }
 
@@ -81,20 +84,22 @@ export default class TSQLLintRuntimeHelper {
       }
 
       const tsqllintInstallDirectory: string = `${TSQLLintRuntimeHelper._applicationRootDirectory}/tsqllint`;
-      if (fs.existsSync(`${tsqllintInstallDirectory}/${TSQLLintRuntimeHelper._runTime}`)) {
-        TSQLLintRuntimeHelper._tsqllintToolsPath = tsqllintInstallDirectory;
-        return resolve(TSQLLintRuntimeHelper._tsqllintToolsPath);
-      }
+      this.fileSystemAdapter.exists(`${tsqllintInstallDirectory}/${TSQLLintRuntimeHelper._runTime}`).then(exists => {
+        if (exists) {
+          TSQLLintRuntimeHelper._tsqllintToolsPath = tsqllintInstallDirectory;
+          return resolve(TSQLLintRuntimeHelper._tsqllintToolsPath);
+        }
 
-      const download: Promise<string> = TSQLLintRuntimeHelper.DownloadRuntime(tsqllintInstallDirectory);
+        const download: Promise<string> = this.DownloadRuntime(tsqllintInstallDirectory);
 
-      download
-        .then((path: string) => this.UnzipRuntime(path, tsqllintInstallDirectory))
-        .then((installDir: string) => {
-          console.log("Installation of TSQLLint Runtime Complete");
-          return resolve(installDir);
-        })
-        .catch((error: Error) => reject(error));
+        download
+          .then((path: string) => this.UnzipRuntime(path, tsqllintInstallDirectory))
+          .then((installDir: string) => {
+            console.log("Installation of TSQLLint Runtime Complete");
+            return resolve(installDir);
+          })
+          .catch((error: Error) => reject(error));
+      }).catch(reject);
     });
   }
 
