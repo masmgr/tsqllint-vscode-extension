@@ -28,7 +28,7 @@ if (ignoreAllRules) {
   const { FlatCompat } = require("@eslint/eslintrc");
 
   const compat = new FlatCompat({ baseDirectory: __dirname });
-  const legacyConfig = compat.config(require("./.eslintrc.js")).map((config) => ({
+  const legacyConfig = compat.config(require("./.eslintrc.js")).map(config => ({
     ...config,
     files: ["**/*.ts"],
   }));

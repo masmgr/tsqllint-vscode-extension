@@ -161,14 +161,7 @@ module.exports = {
     quotes: "off",
     radix: "error",
     semi: "warn",
-    "space-before-function-paren": [
-      "error",
-      {
-        anonymous: "never",
-        asyncArrow: "always",
-        named: "never",
-      },
-    ],
+    "space-before-function-paren": "off",
     "spaced-comment": [
       "error",
       "always",
